@@ -1,41 +1,67 @@
 import streamlit as st
+from prediction_helper import predict  # Ensure this is correctly linked to your prediction_helper.py
 
+# Set the page configuration and title
+st.set_page_config(page_title="Easy Finance: Credit Risk Modelling", page_icon="📊")
 st.title("Easy Finance: Credit Risk Modeling")
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    age = st.number_input("Age", min_value=18, max_value=100, step=1)
-with col2:
-    income = st.number_input("Income", min_value=0, step=1000)
-with col3:
-    loan_amount = st.number_input("Loan Amount", min_value=1000, step=1000)
-with col4:
-    loan_tenure = st.number_input("Loan Tenure (Months)", min_value=6, step=6)
+# Create rows of three columns each
+row1 = st.columns(3)
+row2 = st.columns(3)
+row3 = st.columns(3)
+row4 = st.columns(3)
 
-col5, col6, col7, col8 = st.columns(4)
-with col5:
-    dpd = st.number_input("Days Past Due (DPD)", min_value=0, step=1)
-with col6:
-    credit_utilization = st.slider("Credit Utilization Ratio", 0.0, 1.0, 0.5)
-with col7:
-    residence_type = st.selectbox("Residence Type", ["Owned", "Rental", "Mortgage"])
-with col8:
-    loan_purpose = st.selectbox("Loan Purpose", ["Education", "Home", "Auto", "Personal"])
+# Assign inputs to the first row with default values
+with row1[0]:
+    age = st.number_input('Age', min_value=18, step=1, max_value=100, value=28)
+with row1[1]:
+    income = st.number_input('Income', min_value=0, value=1200000)
+with row1[2]:
+    loan_amount = st.number_input('Loan Amount', min_value=0, value=2560000)
 
-col9, _, _, _ = st.columns(4)
-with col9:
-    loan_type = st.selectbox("Loan Type", ["Unsecured", "Secured"])
+# Calculate Loan to Income Ratio and display it
+loan_to_income_ratio = loan_amount / income if income > 0 else 0
+with row2[0]:
+    st.text("Loan to Income Ratio:")
+    st.text(f"{loan_to_income_ratio:.2f}")  # Display as a text field
 
-if st.button("Submit"):
-    st.write("## Submitted Details")
-    st.json({
-        "Age": age,
-        "Income": income,
-        "Loan Amount": loan_amount,
-        "Loan Tenure (Months)": loan_tenure,
-        "Days Past Due (DPD)": dpd,
-        "Credit Utilization Ratio": credit_utilization,
-        "Residence Type": residence_type,
-        "Loan Purpose": loan_purpose,
-        "Loan Type": loan_type
-    })
+# Assign inputs to the remaining controls
+with row2[1]:
+    loan_tenure_months = st.number_input('Loan Tenure (months)', min_value=0, step=1, value=36)
+with row2[2]:
+    avg_dpd_per_delinquency = st.number_input('Avg DPD', min_value=0, value=20)
+
+with row3[0]:
+    delinquency_ratio = st.number_input('Delinquency Ratio', min_value=0, max_value=100, step=1, value=30)
+with row3[1]:
+    credit_utilization_ratio = st.number_input('Credit Utilization Ratio', min_value=0, max_value=100, step=1, value=30)
+with row3[2]:
+    num_open_accounts = st.number_input('Open Loan Accounts', min_value=1, max_value=4, step=1, value=2)
+
+
+with row4[0]:
+    residence_type = st.selectbox('Residence Type', ['Owned', 'Rented', 'Mortgage'])
+with row4[1]:
+    loan_purpose = st.selectbox('Loan Purpose', ['Education', 'Home', 'Auto', 'Personal'])
+with row4[2]:
+    loan_type = st.selectbox('Loan Type', ['Unsecured', 'Secured'])
+
+
+#Button to calculate risk
+if st.button('Calculate Risk'):
+    # Call the predict function from the helper module
+    # print((age, income, loan_amount, loan_tenure_months, avg_dpd_per_delinquency,
+    #                                             delinquency_ratio, credit_utilization_ratio, num_open_accounts,
+    #                                             residence_type, loan_purpose, loan_type))
+    probability, credit_score, rating = predict(age, income, loan_amount, loan_tenure_months, avg_dpd_per_delinquency,
+                                                delinquency_ratio, credit_utilization_ratio, num_open_accounts,
+                                                residence_type, loan_purpose, loan_type)
+
+    # Display the results
+    st.write(f"Deafult Probability: {probability:.2%}")
+    st.write(f"Credit Score: {credit_score}")
+    st.write(f"Rating: {rating}")
+
+# Footer
+# st.markdown('_Project From Codebasics ML Course_')
+
